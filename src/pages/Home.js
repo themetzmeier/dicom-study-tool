@@ -1,8 +1,9 @@
 import React from "react";
-import Banner from "../images/home_banner.png";
-import dicomView from "../images/dicom_view.png";
-import upload from "../images/upload.png";
-import dragDrop from "../images/drag_drop.png";
+
+const Banner = "https://reviewd-images.s3.us-east-2.amazonaws.com/home_banner.png";
+const dicomView = "https://reviewd-images.s3.us-east-2.amazonaws.com/dicom_view.png";
+const dragDrop = "https://reviewd-images.s3.us-east-2.amazonaws.com/drag_drop.png";
+const upload = "https://reviewd-images.s3.us-east-2.amazonaws.com/upload.png";
 
 export default function Home({ isMobile }) {
     return (

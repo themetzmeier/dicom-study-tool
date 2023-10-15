@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import BrainLogo from "../images/brain.png";
+
+const Logo = "https://reviewd-images.s3.us-east-2.amazonaws.com/brain.png";
 
 export default function Navbar({ isMobile, currentProfile }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,12 +13,12 @@ export default function Navbar({ isMobile, currentProfile }) {
     };
 
     return (
-        <nav className="default-bcg card" style={{ "position": "fixed", "width": "99.15%", "z-index": "3", "padding": "8px", "overflow": "hidden", "letterSpacing": "2px", "top": "0" }}>
+        <nav className="default-bcg card" style={{ "position": "fixed", "width": "99.15%", "zIndex": "3", "padding": "8px", "overflow": "hidden", "letterSpacing": "2px", "top": "0" }}>
             <div style={{ "display": "flex", "alignItems": "center", "paddingLeft": "16px" }}>
                 <div style={{ "display": "flex", "alignItems": "center", }}>
                     <Link to="/" className='hidden-link' >
                         <img
-                            src={BrainLogo}
+                            src={Logo}
                             style={{ "maxWidth": "50px" }}
                             alt="Logo"
                         />
