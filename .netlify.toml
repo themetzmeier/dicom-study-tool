@@ -1,0 +1,11 @@
+[dev]
+  functions = "functions"
+  framework = "create-react-app"
+  functionsPort = 3001
+  targetPort = 3000
+[dev.https]
+  certFile = "cert.pem"
+  keyFile = "key.pem"
+[build]
+  functions = "functions"
+  Command = "npm run prod"
