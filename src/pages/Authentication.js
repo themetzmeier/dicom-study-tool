@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PropTypes from 'prop-types';
 
 function Authentication({ auth, location }) {
     const [currentProfile, setCurrentProfile] = useState('');
 
     let pathname = location.pathname;
+
+    const navigate = useNavigate();
 
     // Check if user is already authenticated with Auth0
     let authenticated = auth.isAuthenticated();
@@ -14,9 +16,9 @@ function Authentication({ auth, location }) {
         //Check for authenticated being true and callback route is hit
         if(authenticated && pathname === "/callback") {
             setCurrentProfile(auth.getProfile());
-            //NEED to setup redirect route
+            navigate("/profile");
         }
-    }, [authenticated, pathname, auth]);
+    }, [authenticated, pathname, auth, navigate]);
 
     useEffect(() => {
         window.scrollTo(0, 0);

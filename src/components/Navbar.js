@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { getObjectValue } from "../utils/utils";
 
 const Logo = "https://reviewd-images.s3.us-east-2.amazonaws.com/brain.png";
 
@@ -26,7 +27,19 @@ export default function Navbar({ isMobile, currentProfile }) {
                     <Link to="/" className='hidden-link' style={{ "marginLeft": "8px" }}>REVIEWD</Link>
                 </div>
                 <div style={{ "marginLeft": "auto", "display": "flex", "alignItems": "center", "height": "100%", "paddingRight": "16px" }}>
-                    <Link to="/login" className="hidden-link" onClick={() => handleToggle()}>Login</Link>
+                    {currentProfile ? (
+                        <React.Fragment>
+                            <Link to="/logout" style={{ "marginRight": "32px" }} className="hidden-link" onClick={() => handleToggle()}>Logout</Link>
+                            {currentProfile && getObjectValue(currentProfile, "firstName") ? (
+                                <Link to="/profile" className="hidden-link" onClick={() => handleToggle()}>{currentProfile.firstName}</Link>
+                            ) : (
+                                <Link to="/logout" className="hidden-link" onClick={() => handleToggle()}>Profile</Link>
+                            )}
+                            
+                        </React.Fragment>
+                    ) : (
+                        <Link to="/login" className="hidden-link" onClick={() => handleToggle()}>Login</Link>
+                    )}
                 </div>
                 
             </div>

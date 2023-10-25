@@ -4,12 +4,49 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Auth from "./Auth";
+import User from "./User";
 import Authentication from './pages/Authentication';
+import Profile from './pages/Profile';
+import { updateProfile as updateAuth0Profile } from "./utils/utils.js";
 
 // Instantiate class for Authentication
 const auth = new Auth();
 
 function App() {
+    const [authenticated, setAuthenticated] = useState(auth.isAuthenticated());
+    const [currentProfile, setCurrentProfile] = useState(null);
+
+    useEffect(() => {
+        if(authenticated && auth.getProfile()) {
+            let profile = auth.getProfile();
+            // console.log(profile);
+
+            createProfile(profile);
+        } else {
+            auth.renewTokens().then((response) => {
+                if(response) {
+                    setAuthenticated(auth.isAuthenticated());
+                }
+            });
+        }
+    }, [authenticated]);
+
+
+    const createProfile = (profile) => {
+        let newCurrentProfile = new User(profile);
+        // console.log(newCurrentProfile);
+
+        setCurrentProfile(newCurrentProfile);
+    };
+
+    const updateProfile = async (profileChanges) => {
+        let updatedProfile = await updateAuth0Profile(profileChanges, currentProfile);
+        // console.log(updatedProfile);
+
+        createProfile(updatedProfile);
+    };
+
+
     let location = useLocation();
 
     // Start of Hook for mobile styling
@@ -32,9 +69,10 @@ function App() {
 
     return (
         <>
-            <Navbar isMobile={isMobile} />
+            <Navbar currentProfile={currentProfile} isMobile={isMobile} />
             <Routes>
                 <Route exact path="/" element={<Home isMobile={isMobile} />} />
+                <Route exact path="/profile" element={<Profile isMobile={isMobile} currentProfile={currentProfile} setCurrentProfile={updateProfile} />} /> 
                 {['/login/', '/register/', '/callback/', '/logout/'].map((path, index) => <Route key={index} exact path={path} element={<Authentication auth={auth} location={location} />} />)}
             </Routes>
             {/* <Footer /> */}

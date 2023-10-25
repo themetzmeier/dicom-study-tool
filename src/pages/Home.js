@@ -1,11 +1,12 @@
 import React from "react";
+import PropTypes from 'prop-types';
 
 const Banner = "https://reviewd-images.s3.us-east-2.amazonaws.com/home_banner.png";
 const dicomView = "https://reviewd-images.s3.us-east-2.amazonaws.com/dicom_view.png";
 const dragDrop = "https://reviewd-images.s3.us-east-2.amazonaws.com/drag_drop.png";
 const upload = "https://reviewd-images.s3.us-east-2.amazonaws.com/upload.png";
 
-export default function Home({ isMobile }) {
+function Home({ isMobile }) {
     return (
         <div className="container" >
             <div className="content" >
@@ -35,3 +36,9 @@ export default function Home({ isMobile }) {
         </div>
     );
 }
+
+Home.propTypes = {
+    isMobile: PropTypes.bool
+};
+
+export default Home;

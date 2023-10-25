@@ -1,34 +1,46 @@
 :root {
-  --offWhite: #f7f7f7;
-  --mainBlack: #000;
-  --mainFontFamily: Verdana, sans-serif;
+    --offWhite: #f7f7f7;
+    --mainBlack: #000;
+    --mainFontFamily: Verdana, sans-serif;
 }
 
 .card {
-  box-shadow:0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12)
+    box-shadow:0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12)
+}
+
+.card-padding {
+    padding: 32px;
 }
 
 .hidden-link {
-  text-decoration: none;
-  cursor: pointer;
-  color: var(--mainBlack);
+    text-decoration: none;
+    cursor: pointer;
+    color: var(--mainBlack);
 }
 
 .hidden-link:visited {
-  color: var(--mainBlack);
+    color: var(--mainBlack);
 }
 
 .container {
-  width: 100%; 
-  margin-top: 125px;
-  display: flex;
-  justify-content: center;
+    width: 100%; 
+    margin-top: 125px;
+    display: flex;
+    justify-content: center;
 }
 
 .content {
-  width: 75%;
+    width: 75%;
 }
 
 .default-bcg {
-  background-color: var(--offWhite);
+    background-color: var(--offWhite);
+}
+
+.input {
+    padding:8px;
+    display:block;
+    border:none;
+    border-bottom:1px solid #ccc;
+    width:100%
 }
