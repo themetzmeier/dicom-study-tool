@@ -3,6 +3,8 @@ import { createDeepClone } from "../utils/utils.js";
 import { AiOutlineEdit, AiFillEdit } from "react-icons/ai";
 import PropTypes from 'prop-types';
 import Loading from "./Loading.js";
+import DropZone from "../components/DropZone.js";
+import DICOM from "../components/DICOM.js";
 
 function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [makeEdits, setMakeEdits] = useState(false);
@@ -11,6 +13,9 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [submitted, setSubmitted] = useState(false);
     const [updateSucess, setUpdateSuccess] = useState(null);
     const [updateError, setUpdateError] = useState(null);
+    const [dicomFiles, setDicomFiles] = useState(null);
+    const [dropZoneVisible, setDropZoneVisible] = useState(false);
+    const [dicomAppIsInitialized, setDicomAppIsInitialized] = useState(null);
 
     useEffect(() => {
         if(currentProfile) {
@@ -41,87 +46,110 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
         }
     };
 
+    const handleDICOMFileUpload = (files) => {
+        setDicomFiles(files);
+    };
+
+    useEffect(() => {
+        if(dicomAppIsInitialized) {
+            setDropZoneVisible(true);
+        }
+    }, [dicomAppIsInitialized]);
+
     if(currentProfile && profileChangesErrors) {
         return(
             <div className="container" >
-                <div className="content" >
-                    <div className="card card-padding">
-                        <div style={{ "width": "100%", "paddingRight":"24px", "paddingTop": "8px", "display": "flex", "alignItems": "center" }}>
-                            <h2>Your Profile</h2>
-                            <p style={{ "marginLeft": "auto" }}>
-                                Manage Your Account Info:
-                                <span>
-                                    <button
-                                        style={{ "background": "transparent", "border": "none", "cursor": "pointer", "outline": "none", "marginLeft": "16px" }}
-                                        onClick={() => { setMakeEdits(!makeEdits); setProfileChanges(currentProfile); setUpdateSuccess(''); setUpdateError(''); }}
-                                    >
-                                        {!makeEdits ? (
-                                            <AiOutlineEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
-                                        ) : (
-                                            <AiFillEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
-                                        )}
-                                    </button>
-                                </span>
-                            </p>
+                <div className="content" style={{ "marginBottom": "32px"}}>
+                    {/* Row 1 */ }
+                    <div style={{ "display": "flex" }} >
+                        <div className="card card-padding" style={{ "marginRight": "32px", "display": "flex", "alignItems": "center", "width": "50%" }}>
+                            <DropZone isMobile={isMobile} updateParent={handleDICOMFileUpload} visible={dropZoneVisible}  />
                         </div>
-                        <div style={isMobile ? {} : {"display":"flex"}}>
-                            <div style={isMobile ? { "width": "100%", "textAlign": "center" } : { "width": "50%" }} className="w3-container">
-                                {makeEdits ? (
-                                    <form onSubmit={(e) => handleSubmit(e)}>
-                                        {Object.keys(currentProfile.defaultProfile).map((key, index) => {
-                                            let placeholder = key;
-                                            return(
-                                                <React.Fragment key={index + 300}>
-                                                    <input
-                                                        name={key}
-                                                        placeholder={placeholder}
-                                                        value={profileChanges[key]}
-                                                        onChange={(e) => handleChange(e)}
-                                                        style={{ "marginTop": "8px", "marginBottom": "8px" }}
-                                                    />
-                                                    <div className="form-error">{profileChangesErrors[`${key}Error`]}</div>
-                                                </React.Fragment>
-                                            );
-                                        })}
+                        <div className="card card-padding" style={{ "width": "50%" }}>
+                            <div style={{ "width": "100%", "paddingRight":"24px", "paddingTop": "8px", "display": "flex", "alignItems": "center" }}>
+                                <h2>Your Profile</h2>
+                                <p style={{ "marginLeft": "auto" }}>
+                                    Manage Your Account Info:
+                                    <span>
                                         <button
-                                            className="w3-button w3-padding-large w3-white w3-border" 
-                                            type="submit"
-                                            disabled={submitted}
+                                            style={{ "background": "transparent", "border": "none", "cursor": "pointer", "outline": "none", "marginLeft": "16px" }}
+                                            onClick={() => { setMakeEdits(!makeEdits); setProfileChanges(currentProfile); setUpdateSuccess(''); setUpdateError(''); }}
                                         >
-                                            <b>Apply Changes</b>
+                                            {!makeEdits ? (
+                                                <AiOutlineEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
+                                            ) : (
+                                                <AiFillEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
+                                            )}
                                         </button>
-                                        <div className="form-error">{updateError}</div>
-                                        <div className="form-error" style={{ "color": "green "}}>{updateSucess}</div>                                                                
-                                    </form>
-                                ) : (
-                                    <div style ={{"marginBottom":"16px"}}>
-                                        <p>
-                                            {currentProfile.username}
-                                        </p>
-                                        <p>
-                                            {currentProfile.firstName} {currentProfile.lastName}
-                                        </p>
-                                        <p>
-                                            {currentProfile.company}
-                                        </p>
-                                        <p style ={{"margin":"0"}}>
-                                            {currentProfile.address1}
-                                        </p>
-                                        <p style ={{"margin":"0"}}>
-                                            {currentProfile.address2}
-                                        </p>
-                                        {currentProfile.city && currentProfile.state ? (
-                                            <p style ={{"margin":"0"}}>
-                                                {currentProfile.city}, {currentProfile.state}
+                                    </span>
+                                </p>
+                            </div>
+                            <div style={isMobile ? {} : {"display":"flex"}}>
+                                <div style={isMobile ? { "width": "100%", "textAlign": "center" } : { "width": "50%" }} className="w3-container">
+                                    {makeEdits ? (
+                                        <form onSubmit={(e) => handleSubmit(e)}>
+                                            {Object.keys(currentProfile.defaultProfile).map((key, index) => {
+                                                let placeholder = key;
+                                                return(
+                                                    <React.Fragment key={index + 300}>
+                                                        <input
+                                                            name={key}
+                                                            placeholder={placeholder}
+                                                            value={profileChanges[key]}
+                                                            onChange={(e) => handleChange(e)}
+                                                            style={{ "marginTop": "8px", "marginBottom": "8px" }}
+                                                        />
+                                                        <div className="form-error">{profileChangesErrors[`${key}Error`]}</div>
+                                                    </React.Fragment>
+                                                );
+                                            })}
+                                            <button
+                                                className="w3-button w3-padding-large w3-white w3-border" 
+                                                type="submit"
+                                                disabled={submitted}
+                                            >
+                                                <b>Apply Changes</b>
+                                            </button>
+                                            <div className="form-error">{updateError}</div>
+                                            <div className="form-error" style={{ "color": "green "}}>{updateSucess}</div>                                                                
+                                        </form>
+                                    ) : (
+                                        <div style ={{"marginBottom":"16px"}}>
+                                            <p>
+                                                {currentProfile.username}
                                             </p>
-                                        ) : null}
-                                        <p style ={{"margin":"0"}}>
-                                            {currentProfile.zip}
-                                        </p>
-                                    </div>
-                                )}
+                                            <p>
+                                                {currentProfile.firstName} {currentProfile.lastName}
+                                            </p>
+                                            <p>
+                                                {currentProfile.company}
+                                            </p>
+                                            <p style ={{"margin":"0"}}>
+                                                {currentProfile.address1}
+                                            </p>
+                                            <p style ={{"margin":"0"}}>
+                                                {currentProfile.address2}
+                                            </p>
+                                            {currentProfile.city && currentProfile.state ? (
+                                                <p style ={{"margin":"0"}}>
+                                                    {currentProfile.city}, {currentProfile.state}
+                                                </p>
+                                            ) : null}
+                                            <p style ={{"margin":"0"}}>
+                                                {currentProfile.zip}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
+                    </div>
+                    {/* Row 2 */}
+                    <div className="card card-padding" style={{ "marginTop": "32px" }}>
+                        <div style={{ "width": "100%", "paddingRight":"24px", "paddingTop": "8px", "display": "flex", "alignItems": "center" }}>
+                            <h2>DICOM View</h2>
+                        </div>
+                        <DICOM isMobile={isMobile} files={dicomFiles} setIsInitialized={setDicomAppIsInitialized} />
                     </div>
                 </div>
             </div>
