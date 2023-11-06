@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import Loading from "./Loading.js";
 import DropZone from "../components/DropZone.js";
 import DICOM from "../components/DICOM.js";
+import HoverButton from "../components/HoverButton.js";
 
 function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [makeEdits, setMakeEdits] = useState(false);
@@ -46,7 +47,11 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
         }
     };
 
-    const handleDICOMFileUpload = (files) => {
+    const handleDICOMFileUpload = (inputFiles, type) => {
+        let files = inputFiles;
+        if(type === "delete") {
+            files = null; 
+        }
         setDicomFiles(files);
     };
 
@@ -62,8 +67,11 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                 <div className="content" style={{ "marginBottom": "32px"}}>
                     {/* Row 1 */ }
                     <div style={{ "display": "flex" }} >
-                        <div className="card card-padding" style={{ "marginRight": "32px", "display": "flex", "alignItems": "center", "width": "50%" }}>
-                            <DropZone isMobile={isMobile} updateParent={handleDICOMFileUpload} visible={dropZoneVisible}  />
+                        <div className="card card-padding" style={{ "marginRight": "32px", "width": "50%" }}>
+                            <h2>Upload Your Own DICOM File</h2>
+                            <div style={{ "display": "flex", "alignItems": "center", "width": "100%" }}>
+                                <DropZone display={true} isMobile={isMobile} files={dicomFiles} updateParent={handleDICOMFileUpload} visible={dropZoneVisible} />
+                            </div>
                         </div>
                         <div className="card card-padding" style={{ "width": "50%" }}>
                             <div style={{ "width": "100%", "paddingRight":"24px", "paddingTop": "8px", "display": "flex", "alignItems": "center" }}>
@@ -71,16 +79,12 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                 <p style={{ "marginLeft": "auto" }}>
                                     Manage Your Account Info:
                                     <span>
-                                        <button
-                                            style={{ "background": "transparent", "border": "none", "cursor": "pointer", "outline": "none", "marginLeft": "16px" }}
-                                            onClick={() => { setMakeEdits(!makeEdits); setProfileChanges(currentProfile); setUpdateSuccess(''); setUpdateError(''); }}
-                                        >
-                                            {!makeEdits ? (
-                                                <AiOutlineEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
-                                            ) : (
-                                                <AiFillEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />
-                                            )}
-                                        </button>
+                                        <HoverButton 
+                                            normalIcon={!makeEdits ? <AiOutlineEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" /> : <AiFillEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />}
+                                            hoverIcon={!makeEdits ? <AiFillEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" /> : <AiOutlineEdit style={{"transform": "scale(3)"}} className="ai-edit-icon" />}
+                                            updateParent={() => { setMakeEdits(!makeEdits); setProfileChanges(currentProfile); setUpdateSuccess(''); setUpdateError(''); }}
+                                            style={{ "background": "transparent", "border": "none", "cursor": "pointer", "outline": "none", "marginLeft": "16px", "display": "inline" }}
+                                        />
                                     </span>
                                 </p>
                             </div>
@@ -104,7 +108,8 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                                 );
                                             })}
                                             <button
-                                                className="w3-button w3-padding-large w3-white w3-border" 
+                                                className="dwv-button" 
+                                                style={{ "padding": "8px", "marginTop": "8px" }}
                                                 type="submit"
                                                 disabled={submitted}
                                             >

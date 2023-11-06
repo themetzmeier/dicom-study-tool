@@ -1,7 +1,11 @@
 :root {
     --offWhite: #f7f7f7;
     --mainBlack: #000;
+    --mainGrey: #B2BEB5;
+    --lightGrey: #e8eaf6;
+    --hover: #6082B6;
     --mainFontFamily: Verdana, sans-serif;
+    --mainTransition: all 0.3s linear;
 }
 
 .card {
@@ -20,6 +24,11 @@
 
 .hidden-link:visited {
     color: var(--mainBlack);
+}
+
+.hidden-link:hover {
+    color: var(--mainGrey);
+    transition: var(--mainTransition);
 }
 
 .container {
@@ -50,6 +59,19 @@
     border: none;
     cursor: pointer;
     outline: none;
+}
+
+.dwv-button {
+    background: transparent;
+    cursor: pointer;
+    border: 1px solid var(--mainGrey);
+    color: var(--mainGrey);
+    border-radius: 5px;
+}
+
+.dwv-button:hover {
+    color: var(--hover);
+    border: 1px solid var(--hover);
 }
 
 #dwv {
@@ -86,9 +108,9 @@
     padding: 64px;
 }
 .dropZoneBorder {
-    border: 5px dashed #e8eaf6; /*indigo:light*/
+    border: 5px dashed var(--lightGrey);
 }
 
 .dropZoneBorder.hover {
-    border: 5px dashed #3f51b5; /*indigo*/
+    border: 5px dashed var(--hover);
 }

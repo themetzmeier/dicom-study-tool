@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
+import RemovalButton from "./RemovalButton";
 import PropTypes from 'prop-types';
+import { includes } from "../utils/utils";
 
-function DropZone({ isMobile, visible, updateParent }) {
+function DropZone({ display, isMobile, files, visible, updateParent }) {
     const dropZoneId = 'dropZone';
     const hoverClassName = 'hover';
 
@@ -95,14 +97,46 @@ function DropZone({ isMobile, visible, updateParent }) {
         input.click();
     };
 
+    const convertFilesToArray = (files) => {
+        let convertedArray = [];
+        if(typeof files === "object") {
+            let objectPrototype = Object.getPrototypeOf(files).toString();
+            if(includes(objectPrototype, "filelist", true)) {
+                convertedArray = Array.from(files);
+            }
+        }
+        return convertedArray;
+    };
+
     return (
-        <>
+        <div>
             {visible ? (
                 <button onClick={() => { openFileBrowser() }} id={dropZoneId} style={{ "width": "100%" }} className="hidden-btn dropZone dropZoneBorder">
                     <p style={{ "margin": "0px" }}>Drag and drop your DICOM file here or click to browse</p>
                 </button>
             ) : null}
-        </>
+            {display && files && files.length > 0 ? (
+                <React.Fragment>
+                    <h4>Files</h4>
+                    <ul style={{ "whiteSpace":"nowrap" }}>
+                        {convertFilesToArray(files).map((file) => {
+                            if(typeof file === "string") {
+                                let title = file.split("/");
+                                let id = title[5];
+                                title = title[6];
+                                return (<li style={isMobile ? { "maxWidth": "250px", "wordBreak": "break-word", "whiteSpace": "normal", "display": "flex", "alignItems": "center" } : { "display": "flex", "alignItems": "center" }} key={id}>{title}<RemovalButton updateParent={updateParent} deleteObject={file} /></li>);
+                            } else if(file && file.path) {
+                                return (<li style={isMobile ? { "maxWidth": "250px", "wordBreak": "break-word", "whiteSpace": "normal", "display": "flex", "alignItems": "center" } : { "display": "flex", "alignItems": "center" }} key={file.path}>{file.path}<RemovalButton updateParent={updateParent} deleteObject={file} /></li>);
+                            } else if(file && file.name) {
+                                return (<li style={isMobile ? { "maxWidth": "250px", "wordBreak": "break-word", "whiteSpace": "normal", "display": "flex", "alignItems": "center" } : { "display": "flex", "alignItems": "center" }} key={file.name}>{file.name}<RemovalButton updateParent={updateParent} deleteObject={file} /></li>);
+                            } else {
+                                return false;
+                            }
+                        })}
+                    </ul>
+                </React.Fragment>
+            ) : null}
+        </div>
     );
 }
 

@@ -76,3 +76,20 @@ export const updateProfile = async (profileUpdates, currentProfile) => {
     }
     return response;
 };
+
+export const includes = (container, value, toLowerCase) => {
+    var returnValue = false;
+    var pos = null;
+    if (container) {
+      if (toLowerCase === true) {
+        pos = container.toLowerCase().indexOf(value);
+      } else {
+        pos = container.indexOf(value);
+      }
+      if (pos >= 0) {
+        returnValue = true;
+      }
+    }
+    return returnValue;
+    
+};
