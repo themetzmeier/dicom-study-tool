@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import RemovalButton from "./RemovalButton";
 import PropTypes from 'prop-types';
-import { includes } from "../utils/utils";
+import { convertFilesToArray } from "../utils/utils";
 
 function DropZone({ display, isMobile, files, visible, updateParent }) {
     const dropZoneId = 'dropZone';
@@ -95,17 +95,6 @@ function DropZone({ display, isMobile, files, visible, updateParent }) {
 
         // Translate click of button element to click of input element
         input.click();
-    };
-
-    const convertFilesToArray = (files) => {
-        let convertedArray = [];
-        if(typeof files === "object") {
-            let objectPrototype = Object.getPrototypeOf(files).toString();
-            if(includes(objectPrototype, "filelist", true)) {
-                convertedArray = Array.from(files);
-            }
-        }
-        return convertedArray;
     };
 
     return (

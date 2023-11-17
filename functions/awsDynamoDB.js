@@ -1,12 +1,14 @@
 const express = require("express");
 const serverless = require("serverless-http");
-const ManagementClient = require('auth0').ManagementClient;
+const AWS = require('aws-sdk');
 const { expressjwt: jwt } = require('express-jwt');
 const { expressJwtSecret } = require('jwks-rsa');
+AWS.config.update({ signatureVersion: 'v4', accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY, secretAccessKey: process.env.REACT_APP_AWS_SECRET_KEY, region: process.env.REACT_APP_AWS_REGION });
+const ddb = new AWS.DynamoDB.DocumentClient();
 
 let app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use((req, res, next) => {
     let header = process.env.REACT_APP_BASE_URL;
     res.append(
@@ -42,38 +44,34 @@ app.use(
 );
 let router = express.Router();
 
-router.post("/update-profile", async (req, res) => {
-    // Get request data
+router.post("/get-states", async (req, res) => {
     let body = req.body.data;
 
-    // Get userId from request data
-    let userId = body.userId;
-    console.log(`Updating User ${userId}`);
-
-    // Get updated metadata from request data
-    let updatedMetaData = body.updatedMetaData;
-    
-    // Try to open Management Client connection and update user's metadata
-    try {
-        // Open new Auth0 Management Client Connection
-        let management = new ManagementClient({
-            domain: process.env.REACT_APP_AUTH0_DOMAIN,
-            clientId: process.env.REACT_APP_AUTH0_BACKEND_CLIENT_ID,
-            clientSecret: process.env.REACT_APP_AUTH0_BACKEND_CLIENT_SECRET
-        });
-
-        // Update User Metadata through Auth0 Management Connection
-        let updatedUser = await management.users.update({ "id": userId }, { "user_metadata": updatedMetaData});
-        res.send(updatedUser);
-    } catch(error) {
-        console.log(error);
+    ddb.scan({ TableName: process.env.REACT_APP_AWS_TABLE_STATES, Key: { "userId": { S: body.userId } } }).promise().then(async (data) => {
+        // console.log(data.Items);
+        res.send(data.Items);
+    }).catch((error) => {
         res.status(500);
-        res.send();
-    }
+        res.end(`Error: ${error}`);
+        console.log(error);
+    });
+});
+
+router.post("/add-state", async (req, res) => {
+    let body = req.body.data;
+    let dicomState = JSON.parse(body.dicomState);
+    
+    ddb.put({ TableName: process.env.REACT_APP_AWS_TABLE_STATES, Item: dicomState }).promise().then(async (data) => {
+        res.send(data);
+    }).catch((error) => {
+        res.status(500);
+        res.end(`Error: ${error}`);
+        console.log(error);
+    });
 });
 
 //console.log(`Listening on port ${port}.`);
 //app.listen(port);
-app.use("/.netlify/functions/auth0", router);
+app.use("/.netlify/functions/awsDynamoDB", router);
 
 module.exports.handler = serverless(app);

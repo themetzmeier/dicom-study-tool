@@ -12,7 +12,8 @@ export default class User {
         address2: '',
         city: '',
         state: '',
-        zip: ''
+        zip: '',
+        files: '',
     };
 
     defaultProfileErrors = {
@@ -25,6 +26,7 @@ export default class User {
         cityError: '',
         stateError: '',
         zipError: '',
+        filesError: ''
     };
 
     constructor(auth0Profile) {
@@ -35,6 +37,7 @@ export default class User {
         this.lastName = auth0Profile.family_name;
         this.sub = auth0Profile.user_id ? auth0Profile.user_id : auth0Profile.sub;
         this.email = auth0Profile.email;
+        this.accessToken = auth0Profile.accessToken;
         if(getObjectValue(auth0Profile, "user_metadata")) {
             this.username = auth0Profile.user_metadata.username;
             this.firstName = auth0Profile.user_metadata.firstName ? auth0Profile.user_metadata.firstName : this.firstName;
@@ -45,6 +48,17 @@ export default class User {
             this.city = auth0Profile.user_metadata.city;
             this.state = auth0Profile.user_metadata.state;
             this.zip = auth0Profile.user_metadata.zip;
+            if(getObjectValue(auth0Profile.user_metadata, "files")) {
+                let newFiles = {}
+                Object.keys(auth0Profile.user_metadata.files).forEach((nestedKey) => {
+                    let newFileName = nestedKey.replace(":", ".");
+                    let newFile = { [newFileName]: { ...auth0Profile.user_metadata.files[nestedKey] } };
+                    Object.assign(newFiles, { ...newFile }); 
+                });
+                this.files = newFiles;
+            } else {
+                this.files = '';
+            }
         }
     }
 

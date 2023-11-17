@@ -29,6 +29,7 @@ cert.pem
 key.pem
 
 favicon.zip
+reviewd-user_accessKeys.csv
 
 .netlify
 .idea

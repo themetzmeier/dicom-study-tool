@@ -20,6 +20,7 @@ function App() {
     useEffect(() => {
         if(authenticated && auth.getProfile()) {
             let profile = auth.getProfile();
+            Object.assign(profile, { "accessToken": auth.accessToken });
             // console.log(profile);
 
             createProfile(profile);

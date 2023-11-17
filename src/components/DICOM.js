@@ -6,15 +6,16 @@ import { IoIosContrast } from 'react-icons/io';
 import { BiRuler,BiReset } from "react-icons/bi";
 import { MdOutlineCameraswitch } from "react-icons/md";
 import PropTypes from 'prop-types';
-import { getObjectValue } from "../utils/utils";
+import { convertFilesToArray, getObjectValue } from "../utils/utils";
 
-function DICOM({ isMobile, files, setIsInitialized }) {
+function DICOM({ isMobile, files, fileIds, dbDICOMStates, setIsInitialized }) {
     const [dicomApp, setDicomApp] = useState(null);
     const [loadProgress, setLoadProgress] = useState(0);
     const [metaData, setMetaData] = useState({});
     const [selectedTool, setSelectedTool] = useState('Select Tool');
     const [orientation, setOrientation] = useState('sagittal');
     const [dataLoaded, setDataLoaded] = useState(false);
+    const [stateUpdateInfo, setStateUpdateInfo] = useState(null);
     const toolIconStyle = {
         "transform": "scale(2.5)"
     }
@@ -106,10 +107,19 @@ function DICOM({ isMobile, files, setIsInitialized }) {
         return can;
     };
 
+    const updateParent = (e) => {
+        // console.log(e);
+        let fileIndex = parseInt(e.groupDivId.split("layerGroup")[1]);
+        let file = files[fileIndex];
+        let fileId = fileIds[fileIndex];
+
+        setStateUpdateInfo({ "name": file.name, "size": file.size, "id": fileId });
+    };
+
     const handleChangeTool = (tool) => {
         if (dicomApp) {
             setSelectedTool(tool);
-            dicomApp.setTool(tool);
+            dicomApp.setTool({ tool, updateParent });
             if (tool === 'Draw') {
                 dicomApp.setToolFeatures({shapeName: tools.Draw.options[0] });
             }
@@ -205,12 +215,12 @@ function DICOM({ isMobile, files, setIsInitialized }) {
     };
 
     useEffect(() => {
-        if(dicomApp && files) {
+        if(dicomApp && files && fileIds) {
             dicomApp.loadFiles(files);
         } else if (dicomApp) {
             dicomApp.reset();
         }
-    }, [dicomApp, files]);
+    }, [dicomApp, files, fileIds]);
 
     useEffect(() => {
         if(dicomApp) {
@@ -218,6 +228,75 @@ function DICOM({ isMobile, files, setIsInitialized }) {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dicomApp]);
+
+    useEffect(() => {
+        if(dicomApp && stateUpdateInfo) {
+            let dicomAppState = dicomApp.getJsonState();
+            // console.log(JSON.parse(dicomAppState));
+
+            let dbObject = { dicomAppState, ...stateUpdateInfo };
+            // console.log(dbObject);
+            
+            storeDICOMState(dbObject);
+
+            setStateUpdateInfo(null);
+        }
+    }, [dicomApp, stateUpdateInfo]);
+
+    const storeDICOMState = (dbObject) => {
+        // console.log(dbObject);
+        localStorage.setItem("dicomAppState", JSON.stringify(dbObject));
+    };
+
+    const getDICOMState = () => {
+        let dicomExistingState = localStorage.getItem("dicomAppState");
+        if(dicomExistingState) {
+            dicomExistingState = JSON.parse(dicomExistingState);
+        }
+        return dicomExistingState;
+    };
+
+    useEffect(() => {
+        if(dicomApp && fileIds && loadProgress && loadProgress === 100) {
+            let dicomExistingState = getDICOMState(fileIds);
+            if(dicomExistingState) {
+                fileIds.forEach((id) => {
+                    // console.log(`${id} === ${dicomExistingState.id} => ${id === dicomExistingState.id}`);
+                    if(id === dicomExistingState.id) {
+                        dicomApp.applyJsonState(dicomExistingState.dicomAppState);
+                    }
+                });
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dicomApp, fileIds, loadProgress]);
+
+    useEffect(() => {
+        if(dicomApp && fileIds && loadProgress && loadProgress === 100 && dbDICOMStates) {
+            if(dbDICOMStates && dbDICOMStates.length > 0) {
+                applyCorrectState(fileIds, dbDICOMStates)
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [dicomApp, fileIds, loadProgress, dbDICOMStates]);
+
+    const applyCorrectState = async (fIds, dStates) => {
+        let selectedState = null;
+        await Promise.all(fIds.map(async(id) => {
+            await Promise.all(dStates.map((dState) => {
+                // console.log(`${id} === ${dState.id} => ${id === dState.id}`);
+                if(id === dState.id) {
+                    selectedState = dState;
+                }
+                return true;
+            }))
+            return true;
+        }));
+
+        if(selectedState) {
+            dicomApp.applyJsonState(selectedState.dicomAppState);
+        }
+    };
 
     return (
         <div>
@@ -256,7 +335,10 @@ function DICOM({ isMobile, files, setIsInitialized }) {
 
 DICOM.propTypes = {
     isMobile: PropTypes.bool,
-    files: PropTypes.object,
+    files: PropTypes.oneOfType([
+        PropTypes.array,
+        PropTypes.object
+    ]),
     setIsInitialized: PropTypes.func
 };
   
