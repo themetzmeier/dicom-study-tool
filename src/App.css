@@ -8,6 +8,15 @@
     --mainTransition: all 0.3s linear;
 }
 
+.main-font {
+    font-family: var(--mainFontFamily);
+}
+
+.btn-link {
+    color: blue;
+    text-decoration: underline;
+}
+
 .card {
     box-shadow:0 2px 5px 0 rgba(0,0,0,0.16),0 2px 10px 0 rgba(0,0,0,0.12)
 }

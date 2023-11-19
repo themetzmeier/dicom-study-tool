@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { convertFilesToArray, createDeepClone, getDICOMStateinDatabase, getFileFromAWSS3, includes, storeDICOMStateinDatabase, uploadFileToAWSS3 } from "../utils/utils.js";
+import { convertFilesToArray, createDeepClone, getDICOMActivitiesinDatabase, getDICOMStateinDatabase, getFileFromAWSS3, getObjectValue, includes, storeDICOMActivityinDatabase, storeDICOMStateinDatabase, uploadFileToAWSS3 } from "../utils/utils.js";
 import { AiOutlineEdit, AiFillEdit } from "react-icons/ai";
 import PropTypes from 'prop-types';
 import Loading from "./Loading.js";
@@ -7,6 +7,12 @@ import DropZone from "../components/DropZone.js";
 import DICOM from "../components/DICOM.js";
 import HoverButton from "../components/HoverButton.js";
 import { v4 as uuidv4 } from 'uuid';
+import RemovalButton from "../components/RemovalButton.js";
+
+const defaultActivityQuestion = {
+    question: '',
+    answer: ''
+};
 
 function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [makeEdits, setMakeEdits] = useState(false);
@@ -21,6 +27,13 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [dicomFileIds, setDicomFileIds] = useState(null);
     const [fileFound, setFileFound] = useState(false);
     const [dicomStates, setDicomStates] = useState(null);
+    const [dbDicomFiles, setDbDicomFiles] = useState(null);
+    const [activityCreationMode, setActivityCreationMode] = useState(null);
+    const [activityQuestions, setActivityQuestions] = useState([createDeepClone(defaultActivityQuestion)]);
+    const [activityName, setActivityName] = useState('');
+    const [activityDescription, setActivityDescription] = useState('');
+    const [dicomActivities, setDicomActivities] = useState(null);
+    const [currentDICOMFileId, setCurrentDICOMFileId] = useState('');
 
     useEffect(() => {
         if(currentProfile) {
@@ -86,6 +99,15 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
         }
     }, [fileFound, currentProfile]);
 
+    useEffect(() => {
+        if(currentProfile) {
+            getDICOMActivitiesinDatabase(currentProfile.userId, currentProfile.accessToken).then((result) => {
+                // console.log(result);
+                setDicomActivities(result);
+            });
+        }
+    }, [currentProfile]);
+
     const checkForPreExistingFile = async () => {
         let fileIds = await Promise.all(convertFilesToArray(dicomFiles).map(async (file) => {
             let fileId = uuidv4(); 
@@ -109,7 +131,8 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const handleDICOMFileUpload = (inputFiles, type) => {
         let files = inputFiles;
         if(type === "delete") {
-            files = null; 
+            files = null;
+            setCurrentDICOMFileId('');
         }
 
         setDicomFiles(files);
@@ -131,13 +154,44 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     };
 
     useEffect(() => {
+        if(currentProfile && getObjectValue(currentProfile, "files")) {
+            setDbDicomFiles(currentProfile.files);
+        }
+    }, [currentProfile]);
+
+    useEffect(() => {
         if(dicomAppIsInitialized && currentProfile) {
             setDropZoneVisible(true);
-            getFileFromAWSS3(Object.keys(currentProfile.files)[0], currentProfile.files[Object.keys(currentProfile.files)[0]].name, currentProfile.accessToken).then((file) => {
-                setDicomFiles([file]);
-            });
         }
     }, [dicomAppIsInitialized, currentProfile]);
+
+    const questionHandleChange = (e, index) => {
+        e.preventDefault();
+
+        let activityQuestionsClone = createDeepClone(activityQuestions);
+        let newQuestionObject = activityQuestionsClone[index];
+        Object.assign(newQuestionObject, { [e.target.name]: e.target.value });
+
+        setActivityQuestions(activityQuestionsClone);
+    };
+
+    const saveActivity = async () => {
+        let dicomFilesArray = convertFilesToArray(dicomFiles);
+        let selectedDICOMIndex = await dicomFileIds.findIndex((item) => item === currentDICOMFileId);
+        let selectedDICOMFile = dicomFilesArray[selectedDICOMIndex];
+
+        let activityObject = {
+            "fileName": selectedDICOMFile.name,
+            "id": currentDICOMFileId,
+            "name": activityName,
+            "description": activityDescription,
+            "userId": currentProfile.sub,
+            "questions": activityQuestions,
+            "private": true,
+        };
+
+        await storeDICOMActivityinDatabase(activityObject, currentProfile.accessToken);
+    };
 
     if(currentProfile && profileChangesErrors) {
         return(
@@ -227,10 +281,146 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                             </div>
                         </div>
                     </div>
+                    {dbDicomFiles ? (
+                        <div className="card card-padding" style={{ "marginTop": "32px" }}>
+                            <h2>Uploaded DICOM Files</h2>
+                            {Object.keys(dbDicomFiles).map((dbFileId) => {
+                                let dbDicomFile = dbDicomFiles[dbFileId];
+                                return(
+                                    <button
+                                        key={dbFileId}
+                                        className="hidden-btn"
+                                        style={{ "paddingTop": "16px", "paddingBottom": "16px", "paddingLeft": "64px", "paddingRight": "64px", border: "1px solid #000", "marginTop": "8px", "marginRight": "16px" }}
+                                        onClick={() => {
+                                            getFileFromAWSS3(dbFileId, dbDicomFile.name, currentProfile.accessToken).then((file) => {
+                                                setCurrentDICOMFileId(dbFileId);
+                                                setDicomFiles([file]);
+                                            });
+                                        }}
+                                    >
+                                        {dbDicomFile.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : null}
+                    {dicomActivities ? (
+                        <div className="card card-padding" style={{ "marginTop": "32px" }}>
+                            <h2>Learning Activities</h2>
+                            {dicomActivities.map((activity) => {
+                                return(
+                                    <button
+                                        key={activity.name}
+                                        className="hidden-btn"
+                                        style={{ "paddingTop": "16px", "paddingBottom": "16px", "paddingLeft": "64px", "paddingRight": "64px", border: "1px solid #000", "marginTop": "8px", "marginRight": "16px" }}
+                                        onClick={() => {
+                                            getFileFromAWSS3(activity.id, activity.fileName, currentProfile.accessToken).then((file) => {
+                                                setCurrentDICOMFileId(activity.id);
+                                                setDicomFiles([file]);
+                                                setActivityName(activity.name);
+                                                setActivityDescription(activity.description);
+                                                setActivityQuestions(activity.questions);
+                                                setActivityCreationMode(true);
+                                            });
+                                        }}
+                                    >
+                                        {activity.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : null}
+                    {activityCreationMode ? (
+                        <div className="card card-padding" style={{ "marginTop": "32px" }}>
+                            <h2>Activity Builder</h2>
+                            <div style={{ "width": "100%" }}>
+                                <input
+                                    style={{ "height": "25px", "width": "250px", "marginBottom": "16px" }}
+                                    value={activityName}
+                                    placeholder="Activity Name"
+                                    onChange={(e) => setActivityName(e.target.value)} 
+                                />
+                                <br />
+                                <textarea
+                                    className="main-font"
+                                    style={{ "minHeight": "38px", "minWidth": "250px", "maxHeight": "100px", "maxWidth": "40%", "marginRight": "5%" }}
+                                    value={activityDescription}
+                                    placeholder="Activity Description"
+                                    type="text-area"
+                                    onChange={(e) => setActivityDescription(e.target.value)} 
+                                />
+                                {activityQuestions.map((questionObject, index) => {
+                                    return(
+                                        <div key={index} style={{ "display": "flex", "alignItems": "center" }}>
+                                            <h2 style={{ "marginRight": "5%" }}>{index + 1}.</h2>
+                                            <textarea
+                                                className="main-font"
+                                                style={{ "minHeight": "38px", "minWidth": "75px", "maxHeight": "100px", "maxWidth": "40%", "marginRight": "5%" }}
+                                                name="question"
+                                                value={questionObject.question}
+                                                placeholder="Question"
+                                                type="text-area"
+                                                onChange={(e) => questionHandleChange(e, index)} 
+                                            />
+                                            <textarea
+                                                className="main-font"
+                                                style={{ "minHeight": "38px", "minWidth": "75px", "maxHeight": "100px", "maxWidth": "40%" }}
+                                                name="answer"
+                                                value={questionObject.answer}
+                                                placeholder="Answer"
+                                                onChange={(e) => questionHandleChange(e, index)}
+                                            />
+                                            <RemovalButton
+                                                deleteObject={questionObject}
+                                                updateParent={(deleteObject, type) => {
+                                                    let activityQuestionsClone = createDeepClone(activityQuestions);
+                                                    let deleteIndex = activityQuestionsClone.findIndex((questionObject) => questionObject.question === deleteObject.question && questionObject.answer === deleteObject.answer);
+                                                    activityQuestionsClone.splice(deleteIndex, deleteIndex + 1);
+
+                                                    if(activityQuestionsClone.length === 0) {
+                                                        activityQuestionsClone.push(defaultActivityQuestion);
+                                                    }
+
+                                                    setActivityQuestions(activityQuestionsClone);
+                                                }}
+                                            />
+                                        </div>
+                                    );
+                                })}
+                                <button 
+                                    className="hidden-btn btn-link"
+                                    style={{ "marginLeft": "65px" }}
+                                    onClick={() => {
+                                        let activityQuestionsClone = createDeepClone(activityQuestions);
+                                        activityQuestionsClone.push(defaultActivityQuestion);
+
+                                        setActivityQuestions(activityQuestionsClone);
+                                    }}
+                                >
+                                    Add Question
+                                </button>
+                            </div>
+                            <div style={{ "width": "100%", "textAlign": "right" }}>
+                                <button
+                                    className="dwv-button"
+                                    onClick={() => saveActivity()}
+                                >
+                                    Save Activity
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
                     {/* Row 2 */}
                     <div className="card card-padding" style={{ "marginTop": "32px" }}>
                         <div style={{ "width": "100%", "paddingRight":"24px", "paddingTop": "8px", "display": "flex", "alignItems": "center" }}>
-                            <h2>DICOM View</h2>
+                            <h2 style={{ "minWidth": "250px"}}>DICOM View</h2>
+                            <div style={{ "width": "100%", "textAlign": "right" }}>
+                                {fileFound ? (
+                                    <button className="dwv-button" onClick={() => setActivityCreationMode(true)}>
+                                        Create Activity
+                                    </button>
+                                ) : null}
+                            </div>
                         </div>
                         <DICOM isMobile={isMobile} dbDICOMStates={dicomStates} files={dicomFiles} fileIds={dicomFileIds} setIsInitialized={setDicomAppIsInitialized} />
                         <div style={{ "width": "100%", "display": "flex", "justifyContent": "right" }}>
@@ -238,7 +428,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                 <button className="dwv-button" onClick={() => storeDICOMState()}>
                                     Save DICOM Annotations
                                 </button>
-                            ) : (
+                            ) : dicomFiles ? (
                                 <button className="dwv-button" onClick={() => {
                                     let dicomFileId = dicomFileIds[0];
                                     if(includes(dicomFileId, "zip", true)) {
@@ -248,7 +438,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                 }}>
                                     Save DICOM File
                                 </button>
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 </div>

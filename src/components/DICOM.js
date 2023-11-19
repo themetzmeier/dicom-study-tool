@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { App } from 'dwv';
+import { App } from '@themetzmeier/dwv';
 import { CgScrollV } from 'react-icons/cg';
 import { LiaArrowsAltSolid } from 'react-icons/lia';
 import { IoIosContrast } from 'react-icons/io';
 import { BiRuler,BiReset } from "react-icons/bi";
 import { MdOutlineCameraswitch } from "react-icons/md";
 import PropTypes from 'prop-types';
-import { convertFilesToArray, getObjectValue } from "../utils/utils";
+import { getObjectValue } from "../utils/utils";
 
 function DICOM({ isMobile, files, fileIds, dbDICOMStates, setIsInitialized }) {
     const [dicomApp, setDicomApp] = useState(null);

@@ -140,6 +140,20 @@ export const getDICOMStateinDatabase = async (userId, accessToken) => {
     return result;
 };
 
+export const storeDICOMActivityinDatabase = async (dicomActivity, accessToken) => {
+    let result = await triggerAWSDynamoDBFunction("post", "add-activity", { dicomActivity }, accessToken);
+    // console.log(result);
+  
+    return result;
+};
+
+export const getDICOMActivitiesinDatabase = async (userId, accessToken) => {
+    let result = await triggerAWSDynamoDBFunction("post", "get-activities", { userId }, accessToken);
+    // console.log(result);
+  
+    return result;
+};
+
 export const includes = (searchable, value, toLowerCase) => {
     let returnValue = false;
     if(searchable) {

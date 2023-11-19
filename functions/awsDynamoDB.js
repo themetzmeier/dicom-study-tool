@@ -70,6 +70,32 @@ router.post("/add-state", async (req, res) => {
     });
 });
 
+router.post("/get-activities", async (req, res) => {
+    let body = req.body.data;
+
+    ddb.scan({ TableName: process.env.REACT_APP_AWS_TABLE_ACTIVITIES, Key: { "userId": { S: body.userId } } }).promise().then(async (data) => {
+        // console.log(data.Items);
+        res.send(data.Items);
+    }).catch((error) => {
+        res.status(500);
+        res.end(`Error: ${error}`);
+        console.log(error);
+    });
+});
+
+router.post("/add-activity", async (req, res) => {
+    let body = req.body.data;
+    let dicomActivity = body.dicomActivity;
+    
+    ddb.put({ TableName: process.env.REACT_APP_AWS_TABLE_ACTIVITIES, Item: dicomActivity }).promise().then(async (data) => {
+        res.send(data);
+    }).catch((error) => {
+        res.status(500);
+        res.end(`Error: ${error}`);
+        console.log(error);
+    });
+});
+
 //console.log(`Listening on port ${port}.`);
 //app.listen(port);
 app.use("/.netlify/functions/awsDynamoDB", router);
