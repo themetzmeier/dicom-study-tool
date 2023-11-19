@@ -92,16 +92,16 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     }, [dicomFiles, currentProfile]);
     
     useEffect(() => {
-        if(fileFound && currentProfile) {
-            getDICOMStateinDatabase(currentProfile.userId, currentProfile.accessToken).then((result) => {
+        if(fileFound && currentDICOMFileId && currentProfile) {
+            getDICOMStateinDatabase(currentDICOMFileId, currentProfile.accessToken).then((result) => {
                 setDicomStates(result);
             });
         }
-    }, [fileFound, currentProfile]);
+    }, [fileFound, currentDICOMFileId, currentProfile]);
 
     useEffect(() => {
         if(currentProfile) {
-            getDICOMActivitiesinDatabase(currentProfile.userId, currentProfile.accessToken).then((result) => {
+            getDICOMActivitiesinDatabase(currentProfile.sub, currentProfile.accessToken).then((result) => {
                 // console.log(result);
                 setDicomActivities(result);
             });
@@ -118,6 +118,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                     if(userFile.name === file.name && userFile.size === file.size) {
                         fileId = userFileId;
                         setFileFound(true);
+                        setCurrentDICOMFileId(fileId);
                     }
                     return true;
                 }));
@@ -226,18 +227,22 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                         <form onSubmit={(e) => handleSubmit(e)}>
                                             {Object.keys(currentProfile.defaultProfile).map((key, index) => {
                                                 let placeholder = key;
-                                                return(
-                                                    <React.Fragment key={index + 300}>
-                                                        <input
-                                                            name={key}
-                                                            placeholder={placeholder}
-                                                            value={profileChanges[key]}
-                                                            onChange={(e) => handleChange(e)}
-                                                            style={{ "marginTop": "8px", "marginBottom": "8px" }}
-                                                        />
-                                                        <div className="form-error">{profileChangesErrors[`${key}Error`]}</div>
-                                                    </React.Fragment>
-                                                );
+                                                if(key === "files") {
+                                                    return null;
+                                                } else {
+                                                    return(
+                                                        <React.Fragment key={index + 300}>
+                                                            <input
+                                                                name={key}
+                                                                placeholder={placeholder}
+                                                                value={profileChanges[key]}
+                                                                onChange={(e) => handleChange(e)}
+                                                                style={{ "marginTop": "8px", "marginBottom": "8px" }}
+                                                            />
+                                                            <div className="form-error">{profileChangesErrors[`${key}Error`]}</div>
+                                                        </React.Fragment>
+                                                    );
+                                                }
                                             })}
                                             <button
                                                 className="dwv-button" 
@@ -294,6 +299,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                         onClick={() => {
                                             getFileFromAWSS3(dbFileId, dbDicomFile.name, currentProfile.accessToken).then((file) => {
                                                 setCurrentDICOMFileId(dbFileId);
+                                                setFileFound(false);
                                                 setDicomFiles([file]);
                                             });
                                         }}
@@ -316,6 +322,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                         onClick={() => {
                                             getFileFromAWSS3(activity.id, activity.fileName, currentProfile.accessToken).then((file) => {
                                                 setCurrentDICOMFileId(activity.id);
+                                                setFileFound(false);
                                                 setDicomFiles([file]);
                                                 setActivityName(activity.name);
                                                 setActivityDescription(activity.description);

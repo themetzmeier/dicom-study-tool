@@ -133,8 +133,8 @@ export const storeDICOMStateinDatabase = async (dicomState, accessToken) => {
     return result;
 };
 
-export const getDICOMStateinDatabase = async (userId, accessToken) => {
-    let result = await triggerAWSDynamoDBFunction("post", "get-states", { userId }, accessToken);
+export const getDICOMStateinDatabase = async (id, accessToken) => {
+    let result = await triggerAWSDynamoDBFunction("post", "get-state", { id }, accessToken);
     // console.log(result);
   
     return result;

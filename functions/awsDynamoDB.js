@@ -44,10 +44,10 @@ app.use(
 );
 let router = express.Router();
 
-router.post("/get-states", async (req, res) => {
+router.post("/get-state", async (req, res) => {
     let body = req.body.data;
 
-    ddb.scan({ TableName: process.env.REACT_APP_AWS_TABLE_STATES, Key: { "userId": { S: body.userId } } }).promise().then(async (data) => {
+    ddb.query({ KeyConditionExpression: "#id = :id", TableName: process.env.REACT_APP_AWS_TABLE_STATES, ExpressionAttributeNames: { "#id": "id" }, ExpressionAttributeValues: { ":id": body.id } }).promise().then(async (data) => {
         // console.log(data.Items);
         res.send(data.Items);
     }).catch((error) => {
@@ -72,9 +72,7 @@ router.post("/add-state", async (req, res) => {
 
 router.post("/get-activities", async (req, res) => {
     let body = req.body.data;
-
-    ddb.scan({ TableName: process.env.REACT_APP_AWS_TABLE_ACTIVITIES, Key: { "userId": { S: body.userId } } }).promise().then(async (data) => {
-        // console.log(data.Items);
+    ddb.query({ KeyConditionExpression: "#userId = :userId", TableName: process.env.REACT_APP_AWS_TABLE_ACTIVITIES, ExpressionAttributeNames: { "#userId": "userId" }, ExpressionAttributeValues: { ":userId": body.userId } }).promise().then(async (data) => {
         res.send(data.Items);
     }).catch((error) => {
         res.status(500);
