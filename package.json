@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": false,
   "dependencies": {
-    "@themetzmeier/dwv": "0.4",
+    "@themetzmeier/dwv": "^0.5.0",
     "auth0": "^4.0.1",
     "auth0-js": "^9.23.0",
     "aws-sdk": "^2.1494.0",
