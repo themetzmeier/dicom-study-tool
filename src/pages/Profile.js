@@ -31,6 +31,8 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [activityCreationMode, setActivityCreationMode] = useState(null);
     const [activityQuestions, setActivityQuestions] = useState([createDeepClone(defaultActivityQuestion)]);
     const [activityName, setActivityName] = useState('');
+    const [activityId, setActivityId] = useState('');
+    const [activityFileName, setActivityFileName] = useState('');
     const [activityDescription, setActivityDescription] = useState('');
     const [dicomActivities, setDicomActivities] = useState(null);
     const [currentDICOMFileId, setCurrentDICOMFileId] = useState('');
@@ -84,7 +86,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
 
     useEffect(() => {
         if(dicomFiles && dicomFiles.length > 0 && currentProfile) {
-            checkForPreExistingFile().then((fileIds) => {
+            checkForPreExistingFile(dicomFiles, currentProfile, setFileFound, setCurrentDICOMFileId).then((fileIds) => {
                 setDicomFileIds(fileIds);
             });
         }
@@ -100,7 +102,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     }, [fileFound, currentDICOMFileId, currentProfile]);
 
     useEffect(() => {
-        if(currentProfile) {
+        if(currentProfile && currentProfile.accessToken) {
             getDICOMActivitiesinDatabase(currentProfile.sub, currentProfile.accessToken).then((result) => {
                 // console.log(result);
                 setDicomActivities(result);
@@ -227,7 +229,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                         <form onSubmit={(e) => handleSubmit(e)}>
                                             {Object.keys(currentProfile.defaultProfile).map((key, index) => {
                                                 let placeholder = key;
-                                                if(key === "files") {
+                                                if(key === "files" || key === "results") {
                                                     return null;
                                                 } else {
                                                     return(
@@ -324,6 +326,8 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                                 setCurrentDICOMFileId(activity.id);
                                                 setFileFound(false);
                                                 setDicomFiles([file]);
+                                                setActivityId(activity.id);
+                                                setActivityFileName(activity.fileName);
                                                 setActivityName(activity.name);
                                                 setActivityDescription(activity.description);
                                                 setActivityQuestions(activity.questions);
@@ -339,7 +343,18 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                     ) : null}
                     {activityCreationMode ? (
                         <div className="card card-padding" style={{ "marginTop": "32px" }}>
-                            <h2>Activity Builder</h2>
+                            <div style={{ "display": "flex", "alignItems": 'center' }}>
+                                <h2>Activity Builder</h2>
+                                <button 
+                                    className="hidden-btn btn-link"
+                                    style={{ "marginLeft": "65px" }}
+                                    onClick={() => {
+                                        window.open(`/activity/${activityId}/${activityFileName}`, "_blank");
+                                    }}
+                                >
+                                    Test Activity
+                                </button>
+                            </div>
                             <div style={{ "width": "100%" }}>
                                 <input
                                     style={{ "height": "25px", "width": "250px", "marginBottom": "16px" }}
@@ -415,6 +430,20 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                     Save Activity
                                 </button>
                             </div>
+                            {getObjectValue(currentProfile, "results") ? (
+                                <div>
+                                    {getObjectValue(currentProfile.results, activityId) ? (
+                                        <React.Fragment>
+                                            <p>Past Activity Results:</p>
+                                            {Object.keys(currentProfile.results[activityId]).map((date) => {
+                                                return(
+                                                    <p key={date} >{date}: {currentProfile.results[activityId][date]}%</p>
+                                                );
+                                            })}
+                                        </React.Fragment>
+                                    ) : null}
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
                     {/* Row 2 */}

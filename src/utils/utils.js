@@ -90,7 +90,7 @@ export const generateMetaDataUpdates = async (user) => {
     // console.log(user);
     let updatedMetadata = {};
     await Promise.all(Object.keys(user.defaultProfile).map(async(key) => {
-        if(key === "files" && user[key]) {
+        if((key === "files" || key === "results") && user[key]) {
             // console.log(user[key]);
             let newFiles = {}
             await Promise.all(Object.keys(user[key]).map((nestedKey) => {
