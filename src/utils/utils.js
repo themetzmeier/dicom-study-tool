@@ -28,14 +28,19 @@ export const makeNetworkRequest = async (httpRequestType, endPoint, postData, au
       url = `${process.env.REACT_APP_DEVELOPMENT_FUNCTIONS_ENDPOINT}${url}`;
     }
   
-    let confirmedPostData = { "data": postData };
+    let confirmedPostData = null;
+    if(postData) {
+        confirmedPostData = { "data": postData };
+    }
 
     try {
         let response = false;
         if(customHeaders) {
             response = await Axios[httpRequestType](`${url}${endPoint}`, confirmedPostData, customHeaders);
-        } else if (authorizationToken) {
+        } else if (authorizationToken && confirmedPostData) {
             response = await Axios[httpRequestType](`${url}${endPoint}`, confirmedPostData, { "headers": { "Authorization": `Bearer ${authorizationToken}` }});
+        } else if (authorizationToken) {
+            response = await Axios[httpRequestType](`${url}${endPoint}`, { "headers": { "Authorization": `Bearer ${authorizationToken}` }});
         } else {
             response = await Axios[httpRequestType](`${url}${endPoint}`, confirmedPostData);
         }
@@ -54,7 +59,7 @@ export const triggerAWSDynamoDBFunction = async (httpRequestType, endPoint, post
     let fullEndpoint = `awsDynamoDB/${endPoint}`;
     let response = await makeNetworkRequest(httpRequestType, fullEndpoint, postData, accessToken);
     // console.log(response);
-    if((endPoint === "add-state" && response) || (response && response.hasOwnProperty("data") && response.data.length > 0)) {
+    if((endPoint === "add-state" && response) || (response && response.hasOwnProperty("data") && response.data.length >= 0)) {
         return response.data;
     } else {
         return false;
@@ -149,6 +154,13 @@ export const storeDICOMActivityinDatabase = async (dicomActivity, accessToken) =
 
 export const getDICOMActivitiesinDatabase = async (userId, accessToken) => {
     let result = await triggerAWSDynamoDBFunction("post", "get-activities", { userId }, accessToken);
+    // console.log(result);
+  
+    return result;
+};
+
+export const getPublicDICOMActivitiesinDatabase = async (accessToken) => {
+    let result = await triggerAWSDynamoDBFunction("get", "get-public-activities", null, accessToken);
     // console.log(result);
   
     return result;

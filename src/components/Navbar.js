@@ -30,12 +30,12 @@ export default function Navbar({ isMobile, currentProfile }) {
                     {currentProfile ? (
                         <React.Fragment>
                             <Link to="/logout" style={{ "marginRight": "32px" }} className="hidden-link" onClick={() => handleToggle()}>Logout</Link>
+                            <Link to="/activities" style={{ "marginRight": "32px" }} className="hidden-link" onClick={() => handleToggle()}>Activities</Link>
                             {currentProfile && getObjectValue(currentProfile, "firstName") ? (
                                 <Link to="/profile" className="hidden-link" onClick={() => handleToggle()}>{currentProfile.firstName}</Link>
                             ) : (
-                                <Link to="/logout" className="hidden-link" onClick={() => handleToggle()}>Profile</Link>
+                                <Link to="/profile" className="hidden-link" onClick={() => handleToggle()}>Profile</Link>
                             )}
-                            
                         </React.Fragment>
                     ) : (
                         <Link to="/login" className="hidden-link" onClick={() => handleToggle()}>Login</Link>

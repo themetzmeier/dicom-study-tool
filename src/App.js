@@ -10,6 +10,7 @@ import Profile from './pages/Profile';
 import { updateProfile as updateAuth0Profile } from "./utils/utils.js";
 import Error from './pages/Error';
 import Activity from './pages/Activity.js';
+import Activities from './pages/Activities.js';
 
 // Instantiate class for Authentication
 const auth = new Auth();
@@ -75,6 +76,7 @@ function App() {
             <Navbar currentProfile={currentProfile} isMobile={isMobile} />
             <Routes>
                 <Route exact path="/" element={<Home isMobile={isMobile} />} />
+                <Route exact path="/activities" element={<Activities isMobile={isMobile} currentProfile={currentProfile} />} />
                 <Route exact path="/profile" element={<Profile isMobile={isMobile} currentProfile={currentProfile} setCurrentProfile={updateProfile} />} />
                 <Route exact path="/activity/:activityId/:activityFileName" element={<Activity isMobile={isMobile} currentProfile={currentProfile} setCurrentProfile={updateProfile} />} />
                 {['/login/', '/register/', '/callback/', '/logout/'].map((path, index) => <Route key={index} exact path={path} element={<Authentication auth={auth} location={location} />} />)}

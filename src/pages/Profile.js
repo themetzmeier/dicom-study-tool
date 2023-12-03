@@ -34,6 +34,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [activityId, setActivityId] = useState('');
     const [activityFileName, setActivityFileName] = useState('');
     const [activityDescription, setActivityDescription] = useState('');
+    const [activityPrivate, setActivityPrivate] = useState(true);
     const [dicomActivities, setDicomActivities] = useState(null);
     const [currentDICOMFileId, setCurrentDICOMFileId] = useState('');
 
@@ -190,7 +191,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
             "description": activityDescription,
             "userId": currentProfile.sub,
             "questions": activityQuestions,
-            "private": true,
+            "private": activityPrivate,
         };
 
         await storeDICOMActivityinDatabase(activityObject, currentProfile.accessToken);
@@ -332,6 +333,7 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                                 setActivityDescription(activity.description);
                                                 setActivityQuestions(activity.questions);
                                                 setActivityCreationMode(true);
+                                                setActivityPrivate(activity.private);
                                             });
                                         }}
                                     >
@@ -347,13 +349,33 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                 <h2>Activity Builder</h2>
                                 <button 
                                     className="hidden-btn btn-link"
-                                    style={{ "marginLeft": "65px" }}
+                                    style={{ "marginLeft": "64px" }}
                                     onClick={() => {
                                         window.open(`/activity/${activityId}/${activityFileName}`, "_blank");
                                     }}
                                 >
                                     Test Activity
                                 </button>
+                                <div style={{ "display": "flex", "marginLeft": "64px" }}>
+                                    <input
+                                        style={{ "marginRight":"6px" }}
+                                        type="checkbox"
+                                        checked={!activityPrivate}
+                                        onChange={() => { setActivityPrivate(false); }}
+                                    />
+                                    <label style={{ "marginRight": "16px" }}>
+                                        Public
+                                    </label>
+                                    <input
+                                        style={{ "marginRight":"6px" }}
+                                        type="checkbox"
+                                        checked={activityPrivate}
+                                        onChange={() => { setActivityPrivate(true); }}
+                                    />
+                                    <label>
+                                        Private
+                                    </label>
+                                </div>
                             </div>
                             <div style={{ "width": "100%" }}>
                                 <input

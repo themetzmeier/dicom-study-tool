@@ -81,6 +81,21 @@ router.post("/get-activities", async (req, res) => {
     });
 });
 
+router.get("/get-public-activities", async (req, res) => {
+    ddb.scan({ TableName: process.env.REACT_APP_AWS_TABLE_ACTIVITIES }).promise().then(async(data) => {
+        // console.log(data.Items);
+        let databaseItems = data.Items;
+        if(databaseItems && databaseItems.length > 0) {
+            databaseItems = databaseItems.filter((item) => item.private == false);
+        }
+        res.send(databaseItems);
+    }).catch((error) => {
+        res.status(500);
+        res.end(`Error: ${error}`);
+        console.log(error);
+    });
+});
+
 router.post("/add-activity", async (req, res) => {
     let body = req.body.data;
     let dicomActivity = body.dicomActivity;
