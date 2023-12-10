@@ -59,7 +59,7 @@ export const triggerAWSDynamoDBFunction = async (httpRequestType, endPoint, post
     let fullEndpoint = `awsDynamoDB/${endPoint}`;
     let response = await makeNetworkRequest(httpRequestType, fullEndpoint, postData, accessToken);
     // console.log(response);
-    if((endPoint === "add-state" && response) || (response && response.hasOwnProperty("data") && response.data.length >= 0)) {
+    if(((endPoint === "add-state" || endPoint === "add-activity") && response) || (response && response.hasOwnProperty("data") && response.data.length >= 0)) {
         return response.data;
     } else {
         return false;

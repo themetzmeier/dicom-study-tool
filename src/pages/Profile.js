@@ -37,6 +37,10 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     const [activityPrivate, setActivityPrivate] = useState(true);
     const [dicomActivities, setDicomActivities] = useState(null);
     const [currentDICOMFileId, setCurrentDICOMFileId] = useState('');
+    const [DICOMFileUploadedSuccess, setDICOMFileUploadedSuccess] = useState('');
+    const [DICOMFileUploadedError, setDICOMFileUploadedError] = useState('');
+    const [activitySavedSuccess, setActivitySavedSuccess] = useState('');
+    const [activitySavedError, setActivitySavedError] = useState('');
 
     useEffect(() => {
         if(currentProfile) {
@@ -77,11 +81,16 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
             }
             // console.log(profileUpdateObject);
 
-            await uploadFileToAWSS3(file, id, currentProfile.accessToken);
+            let result = await uploadFileToAWSS3(file, id, currentProfile.accessToken);
 
             await setCurrentProfile(profileUpdateObject);
-        } else {
-            // Upload DICOM drawing state to DynamoDB
+
+            if(result) {
+                setDICOMFileUploadedSuccess('Successfully saved DICOM file.');
+            } else {
+                setDICOMFileUploadedError('Failed to save DICOM file.');
+            }
+            
         }
     };
 
@@ -133,10 +142,12 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
     };
 
     const handleDICOMFileUpload = (inputFiles, type) => {
+        setDICOMFileUploadedSuccess('');
         let files = inputFiles;
         if(type === "delete") {
             files = null;
             setCurrentDICOMFileId('');
+            setFileFound(false);
         }
 
         setDicomFiles(files);
@@ -152,6 +163,12 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
             
             result = await storeDICOMStateinDatabase(JSON.stringify(dicomStateObject), currentProfile.accessToken);
             // console.log(result);
+            if(result) {
+                setDICOMFileUploadedSuccess('Successfully saved DICOM annotations');
+            } else {
+                setDICOMFileUploadedError('Failed to save DICOM annotations');
+            }
+            
         }
 
         return result;
@@ -171,6 +188,9 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
 
     const questionHandleChange = (e, index) => {
         e.preventDefault();
+
+        setActivitySavedSuccess('');
+        setActivitySavedError('');
 
         let activityQuestionsClone = createDeepClone(activityQuestions);
         let newQuestionObject = activityQuestionsClone[index];
@@ -194,7 +214,14 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
             "private": activityPrivate,
         };
 
-        await storeDICOMActivityinDatabase(activityObject, currentProfile.accessToken);
+        let response = await storeDICOMActivityinDatabase(activityObject, currentProfile.accessToken);
+        // console.log(response);
+        
+        if(response) {
+            setActivitySavedSuccess('Successfully saved activity');
+        } else {
+            setActivitySavedError('Failed to save activity');
+        }
     };
 
     if(currentProfile && profileChangesErrors) {
@@ -382,7 +409,12 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                     style={{ "height": "25px", "width": "250px", "marginBottom": "16px" }}
                                     value={activityName}
                                     placeholder="Activity Name"
-                                    onChange={(e) => setActivityName(e.target.value)} 
+                                    onChange={(e) => {
+                                        e.preventDefault();
+                                        setActivityName(e.target.value);
+                                        setActivitySavedSuccess('');
+                                        setActivitySavedError('');
+                                    }} 
                                 />
                                 <br />
                                 <textarea
@@ -391,7 +423,12 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                     value={activityDescription}
                                     placeholder="Activity Description"
                                     type="text-area"
-                                    onChange={(e) => setActivityDescription(e.target.value)} 
+                                    onChange={(e) => {
+                                        e.preventDefault();
+                                        setActivityDescription(e.target.value);
+                                        setActivitySavedSuccess('');
+                                        setActivitySavedError('');
+                                    }} 
                                 />
                                 {activityQuestions.map((questionObject, index) => {
                                     return(
@@ -451,6 +488,8 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                 >
                                     Save Activity
                                 </button>
+                                <p style={{ "color": "green" }}>{activitySavedSuccess}</p>
+                                <p style={{ "color": "red" }}>{activitySavedError}</p>
                             </div>
                             {getObjectValue(currentProfile, "results") ? (
                                 <div>
@@ -497,6 +536,10 @@ function Profile({ isMobile, currentProfile, setCurrentProfile }) {
                                     Save DICOM File
                                 </button>
                             ) : null}
+                        </div>
+                        <div style={{ "width": "100%", "display": "flex", "justifyContent": "right" }}>
+                            <p style={{ "color": "green" }}>{DICOMFileUploadedSuccess}</p>
+                            <p style={{ "color": "red" }}>{DICOMFileUploadedError}</p>
                         </div>
                     </div>
                 </div>
