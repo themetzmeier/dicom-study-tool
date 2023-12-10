@@ -14,6 +14,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
     const [dicomStates, setDicomStates] = useState(null);
     const [dicomActivities, setDicomActivities] = useState(null);
     const [currentDicomActivity, setCurrentDicomActivity] = useState(null);
+    const [editedCurrentDicomActivity, setEditedCurrentDicomActivity] = useState(null);
     const [submitted, setSubmitted] = useState(false);
     const [percentage, setPercentage] = useState(null);
 
@@ -49,6 +50,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                         return { ...result, "userAnswer": '' };
                     });
                     Object.assign(filteredResults[0], { questions: activityQuestions });
+                    setEditedCurrentDicomActivity(filteredResults[0]);
                     setCurrentDicomActivity(filteredResults[0]);
                 }
             });
@@ -62,7 +64,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
         let questionObject = currentDicomActivityClone.questions[index];
         Object.assign(questionObject, { [e.target.name]: e.target.value });
 
-        setCurrentDicomActivity(currentDicomActivityClone);
+        setEditedCurrentDicomActivity(currentDicomActivityClone);
     };
 
     const calculateResults = async () => {
@@ -70,7 +72,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
         let questions = currentDicomActivityClone.questions;
 
         let correctAnswers = 0;
-        let newQuestions = questions.map((question) => {
+        let newQuestions = editedCurrentDicomActivity.questions.map((question) => {
             let correct = false;
             if(question.answer === question.userAnswer) {
                 correct = true;
@@ -124,6 +126,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                                 ) : null}
                             </div>
                             {currentDicomActivity.questions.map((question, index) => {
+                                let editedQuestion = editedCurrentDicomActivity.questions[index];
                                 return(
                                     <div key={JSON.stringify(question)} className="card card-padding" style={{ "marginTop": "32px" }}>
                                         <h4>{index + 1}. {question.question}</h4>
@@ -150,7 +153,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                                                 className="main-font"
                                                 style={{ "minHeight": "38px", "minWidth": "250px", "maxHeight": "100px", "maxWidth": "40%", "marginRight": "5%" }}
                                                 name="userAnswer"
-                                                value={question.userAnswer}
+                                                value={editedQuestion.userAnswer}
                                                 placeholder="Your Answer"
                                                 type="text-area"
                                                 onChange={(e) => { answerHandleChange(e, index) }} 
