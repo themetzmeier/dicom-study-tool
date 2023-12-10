@@ -41,16 +41,15 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                 setDicomStates(result);
             });
             getDICOMActivitiesinDatabase(currentProfile.sub, currentProfile.accessToken).then((results) => {
-                // console.log(results);
                 setDicomActivities(results);
 
-                results.filter((activity) => activity.id === dicomFileId);
-                if(results.length === 1) {
-                    let activityQuestions = results[0].questions.map((result) => {
+                let filteredResults = results.filter((activity) => activity.id === dicomFileId);
+                if(filteredResults.length === 1) {
+                    let activityQuestions = filteredResults[0].questions.map((result) => {
                         return { ...result, "userAnswer": '' };
                     });
-                    Object.assign(results[0], { questions: activityQuestions });
-                    setCurrentDicomActivity(results[0]);
+                    Object.assign(filteredResults[0], { questions: activityQuestions });
+                    setCurrentDicomActivity(filteredResults[0]);
                 }
             });
         }
@@ -126,7 +125,7 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                             </div>
                             {currentDicomActivity.questions.map((question, index) => {
                                 return(
-                                    <div key={question} className="card card-padding" style={{ "marginTop": "32px" }}>
+                                    <div key={JSON.stringify(question)} className="card card-padding" style={{ "marginTop": "32px" }}>
                                         <h4>{index + 1}. {question.question}</h4>
                                         {submitted ? (
                                             <div style={{ "display": "flex" }}>
