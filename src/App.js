@@ -7,7 +7,7 @@ import Auth from "./Auth";
 import User from "./User";
 import Authentication from './pages/Authentication';
 import Profile from './pages/Profile';
-import { updateProfile as updateAuth0Profile } from "./utils/utils.js";
+import { getObjectValue, updateProfile as updateAuth0Profile } from "./utils/utils.js";
 import Error from './pages/Error';
 import Activity from './pages/Activity.js';
 import Activities from './pages/Activities.js';
@@ -45,6 +45,10 @@ function App() {
 
     const updateProfile = async (profileChanges) => {
         let updatedProfile = await updateAuth0Profile(profileChanges, currentProfile);
+        if(getObjectValue(profileChanges, "accessToken")) {
+            Object.assign(updatedProfile, { "accessToken": profileChanges.accessToken });
+        } 
+
         // console.log(updatedProfile);
 
         createProfile(updatedProfile);

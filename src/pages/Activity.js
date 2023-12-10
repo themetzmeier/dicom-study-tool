@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from 'prop-types';
 import Loading from "./Loading";
 import { useParams } from "react-router-dom";
-import { createDeepClone, getDICOMActivitiesinDatabase, getDICOMStateinDatabase, getFileFromAWSS3, getObjectValue, updateProfile } from "../utils/utils";
+import { createDeepClone, getDICOMActivitiesinDatabase, getDICOMStateinDatabase, getFileFromAWSS3, getObjectValue, getPublicDICOMActivitiesinDatabase, updateProfile } from "../utils/utils";
 import DICOM from "../components/DICOM";
 import { GiCheckMark } from "react-icons/gi";
 import { GoX } from "react-icons/go";
@@ -35,6 +35,25 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [dicomFiles, currentProfile, submitted]);
 
+    const setActivity =  (dicomFileId, activities) => {
+        let filteredResults = activities.filter((activity) => activity.id === dicomFileId);
+        // console.log(filteredResults);
+
+        if(filteredResults.length === 1) {
+            setDicomActivities(activities);
+            let activityQuestions = filteredResults[0].questions.map((result) => {
+                return { ...result, "userAnswer": '' };
+            });
+            Object.assign(filteredResults[0], { questions: activityQuestions });
+            setEditedCurrentDicomActivity(filteredResults[0]);
+            setCurrentDicomActivity(filteredResults[0]);
+
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     useEffect(() => {
         if(dicomFileIds && currentProfile && !submitted) {
             let dicomFileId = dicomFileIds[0]
@@ -42,16 +61,11 @@ function Activity({ isMobile, currentProfile, setCurrentProfile }) {
                 setDicomStates(result);
             });
             getDICOMActivitiesinDatabase(currentProfile.sub, currentProfile.accessToken).then((results) => {
-                setDicomActivities(results);
-
-                let filteredResults = results.filter((activity) => activity.id === dicomFileId);
-                if(filteredResults.length === 1) {
-                    let activityQuestions = filteredResults[0].questions.map((result) => {
-                        return { ...result, "userAnswer": '' };
+                let isActivitySet = setActivity(dicomFileId, results);
+                if(!isActivitySet) {
+                    getPublicDICOMActivitiesinDatabase(currentProfile.accessToken).then((publicResults) => {
+                        setActivity(dicomFileId, publicResults);
                     });
-                    Object.assign(filteredResults[0], { questions: activityQuestions });
-                    setEditedCurrentDicomActivity(filteredResults[0]);
-                    setCurrentDicomActivity(filteredResults[0]);
                 }
             });
         }
